@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UserRequest;
 
+use App\Photo;
 use App\Role;
 use App\User;
 use Illuminate\Http\Request;
 
 use App\Http\Requests;
+use Illuminate\Support\Facades\Session;
 
 class AdminUserController extends Controller
 {
@@ -43,12 +45,24 @@ class AdminUserController extends Controller
      */
     public function store(UserRequest $request)
     {
-         return $request->all();
-        $name = $request->name;
-        $email = $request->email;
-        $status = $request->status;
-        $role = $request->role;
 
+
+        $user['name'] = $request->name;
+        $user['password']=bcrypt($request->password);
+        $user['email'] = $request->email;
+        $user['is_active'] = $request->status;
+        $user['role_id'] = $request->role;
+           if ($request->hasFile('file')){
+               $photoName = time().$request->file('file')->getClientOriginalName();
+               $request->file('file')->move('images',$photoName);
+              $photo = Photo::create(['file'=>$photoName]);
+           }
+           $id= $photo->id;
+
+          $photo_create = Photo::find($id);
+          $photo_create->user()->create($user);
+        Session::flash('message','User has been created');
+        return redirect('/admin/users');
         //
     }
 
@@ -71,7 +85,9 @@ class AdminUserController extends Controller
      */
     public function edit($id)
     {
-        //
+        $role = Role::pluck('name','id')->all();
+        $user = User::find($id);
+        return view('admin.users.edit',compact('user','role'));
     }
 
     /**
@@ -81,9 +97,26 @@ class AdminUserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UserRequest $request, $id)
     {
-        //
+
+       $users = User::find($id);
+        if ($request->hasFile('file')){
+            $photo_id = $users->photo_id;
+            $photoName = time().$request->file('file')->getClientOriginalName();
+            $request->file('file')->move('images',$photoName);
+            $photo = Photo::find($photo_id)->update(['file'=>$photoName]);
+        }
+        $user['name'] = $request->name;
+        $user['password']=bcrypt($request->password);
+        $user['email'] = $request->email;
+        $user['is_active'] = $request->status;
+        $user['role_id'] = $request->role;
+        $user = User::find($id)->update($user);
+        Session::flash('message','User has been updated');
+        return redirect('admin/users');
+
+
     }
 
     /**
@@ -94,6 +127,11 @@ class AdminUserController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $user = User::find($id);
+        unlink(public_path().$user->photo->file);
+        $user->photo()->delete();
+        $user->delete();
+        Session::flash('message','User has been deleted');
+       return redirect('admin/users');
     }
 }
