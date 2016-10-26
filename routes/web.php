@@ -12,10 +12,12 @@
 */
 
 
+use App\Post;
 use App\User;
 
 Route::get('/', function () {
-    return view('welcome');
+                     $post = Post::all();
+    return view('welcome',compact('post'));
 });
 
 Auth::routes();
@@ -29,6 +31,8 @@ Route::group(['middleware'=>'admin'],function (){
 
     Route::resource('/admin/users','AdminUserController');
     Route::resource('/admin/posts','AdminPostController');
+    Route::resource('/admin/category','AdminCategoryController');
+
 
 
 

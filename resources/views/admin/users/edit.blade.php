@@ -4,7 +4,7 @@
 @section('content')
     <h1>Update User </h1>
     <div class="col-sm-3">
-        <img src="{{$user->photo->file}}" alt="" class="img-responsive img-rounded">
+        <img src="{{$user->photo? $user->photo->file :'images/1477321700ID card.jpg'}}" alt="" class="img-responsive img-rounded">
 
 
 
